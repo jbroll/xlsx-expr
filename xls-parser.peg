@@ -1,0 +1,30 @@
+PEG xlsexpr (Formula)
+	Formula    <- Expr EOF ;
+
+leaf:   Number	<- Sign? ( <ddigit>+ Frac? ) / Frac?	;
+    	Sign	<- '-' / '+'                  		;
+    	Frac	<- '.' <ddigit>*			;
+
+    	MulOp	<- '=' / '*' / '/'             		;
+	Expo	<- Value ('^' Value)?			;
+	Prod	<- Expo (MulOp Expo)*			;
+    	AddOp	<- '^' / '+' / '-'          		;
+	Sum	<- Prod (AddOp Prod)*			;
+    	Expr	<- Sum					;
+
+    	Value       <- '(' Expr ')' / Func / Range / Cell / Number	;
+
+	Func	<- FunName '(' FunArgs ')'		;
+	FunName	<- <alpha><alnum>*			;
+	FunArgs	<- Expr (',' Expr)*			;
+
+    	Range      <- Sheet? rowcol ':' rowcol		;
+    	Cell       <- Sheet? cell			;
+	Sheet	   <- "'"? sheet "'"? '!' 		;
+	sheet	   <- <alpha><alnum>+ 			;
+	cell	   <- <alpha>+<ddigit>+			;
+    	rowcol     <- col row				;
+	col	   <- <alpha>+				;
+	row	   <- <ddigit>+				;
+	EOF	   <- !. 				;
+END;

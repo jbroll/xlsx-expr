@@ -1,0 +1,82 @@
+#!/bin/env tclkit8.6
+#
+
+if { 0 } {
+    change around cells, format, values, numfmt
+    compare mode
+    xml command
+    dump cells
+}
+
+source  xml.tcl
+source xlsx.tcl
+source tttt.tcl
+
+package require vfs
+package require vfs::zip
+
+
+set argv [lassign $argv op]
+
+switch $op {
+ cell {
+    lassign $argv file sheet cell
+
+    workbook create wb $file
+    puts [[wb name2obj $sheet] cell $cell]
+ }
+ cells {	workbook create wb [lindex $argv 0]
+ 		foreach name [wb sheets] {
+		    set sheet [wb name2obj $name]
+		    puts [list $sheet [$sheet cells]]
+		}
+ }
+ compare {
+    lassign $argv file1 file2
+
+    workbook create wb1 $file1
+    workbook create wb2 $file2
+
+    foreach name1 [wb1 sheets] name2 [wb2 sheets] {
+        if { $name1 ne $name2 } {
+	    puts "Sheet names don't match $name1, $name2"
+	}
+
+	set sh1 [wb1 name2obj $name1]
+	set sh2 [wb2 name2obj $name2]
+
+	foreach cell [$sh1 cells] {
+	    puts "$cell [$sh1 cell $cell] $sh2 cell $cell"
+	}
+    }
+ }
+ test {
+    = ::wb		%s 	{ workbook create wb excel.xlsx } 	"Load xlsx"
+
+    = "File D11160"	%s 	{ wb sheet 1 cell A2 }		"String Cell Value"
+    = 102.425		%.3f 	{ wb sheet 4 cell G25 }		"Max"
+    = 101.679		%.3f 	{ wb sheet 4 cell I25 }		"If"
+    = None		%s 	{ wb sheet 2 cell G11 }		"None"
+    = None		%s 	{ wb sheet 2 cell AM11 }	"If"
+    =   4.729		%.3f 	{ wb sheet 2 cell AM9 }		"If"
+    = 0.0142		%.4f	{ wb sheet 3 cell R10 }		"vlookup"
+    = 114		%d 	{ wb sheet 3 cell S10}		"days360"
+    = 4.729		%.3f 	{ wb sheet 2 cell AM9}		"yield"
+    = 19355.700		%.3f 	{ wb sheet 2 cell O9}		"damages"
+
+    Done
+
+    exit
+ }
+}
+
+exit
+
+
+#puts [glob xlsx/xl/*]
+#puts [cat xlsx/xl/styles.xml]
+#exit
+
+
+puts [wb sheet [wb name2sheet $sheet] cell $cell]
+
